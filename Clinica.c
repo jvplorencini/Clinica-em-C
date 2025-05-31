@@ -36,81 +36,6 @@ typedef struct{
     Data datas;
 }Consulta;
 
-int main (){
-    Paciente pacientes[limitePaciente];
-    Medico medicos[limiteMed];
-    Consulta consultas[limiteAgendamento];
-    int opcao;
-    int qtdPac = 0;
-    int qtdMed = 0;
-    int qtdConsult = 0;
-
-    do{ 
-        printf("1:Cadastor de Pacientes \n2:Cadastro de Medicos \n3: Lista de Medicos e Pacientes\n4: Agendamento das consultas\n");
-        scanf("%d", &opcao);
-        switch(opcao){
-            case 1:{
-                if(qtdPac == limitePaciente){
-                    printf("Limite de pacientes atingidos\n");
-                } else{
-                    int tempQtd;
-                    printf("Digite quantos pacientes quer cadastrar\n");
-                    scanf("%d", &tempQtd);
-
-                    while(tempQtd > 20 || tempQtd > (limitePaciente - qtdPac)){
-                        printf("A quantidade digitada ultrapassa o limite de cadastro permitido\n");
-                        printf("Digite outro valor\n");
-                        scanf("%d", &tempQtd);
-                    }
-                    cadastroPaciente(pacientes, tempQtd, qtdPac);
-                    qtdPac += tempQtd;
-                }
-                    break;
-                }
-            case 2:{
-                if(qtdMed == limiteMed){
-                    printf("Limite de medicos atingidos\n");
-                } else{
-                    int tempQtd;
-                    printf("Digite quantos medicos quer cadastrar\n");
-                    scanf("%d", &tempQtd);
-
-                    while(tempQtd > 20 || tempQtd > (limiteMed - qtdMed)){
-                        printf("A quantidade digitada ultrapassa o limite de cadastro permitido\n");
-                        printf("Digite outro valor\n");
-                        scanf("%d", &tempQtd);
-                    }
-                    cadastroMedico(medicos, tempQtd, qtdMed);
-                    qtdMed += tempQtd;
-                }
-                break;
-            }
-            case 3:
-                listaPacMed(medicos, pacientes, qtdMed, qtdPac);
-                break;
-            case 4:{
-                if(qtdConsult == limiteAgendamento){
-                    printf("O limite de consultas agendadas foi atingido\n");
-                }else{
-                    int tempQtd;
-                    printf("Quantas consultas quer cadastrar:\n");
-                    scanf("%d", &tempQtd);
-                    while(tempQtd > 20 || tempQtd > (limiteAgendamento - qtdConsult)){
-                        printf("A quantidade digitada ultrapassa o limite de cadastro permitido\n");
-                        printf("Digite outro valor\n");
-                        scanf("%d", &tempQtd);
-                    }
-                    agendaConsulta(consultas, tempQtd, qtdConsult, qtdPac, qtdMed);
-                    qtdConsult += tempQtd;
-                }
-                break;
-            }
-        }
-    }while(opcao != 0);
-    return 0;
-
-}
-
 int verificaCPF(Paciente pacientes[], int i, int cpf){
     for(int j = 0; j < i; j++){
         if(pacientes[j].CPF == cpf){
@@ -203,34 +128,33 @@ int verificaData(Consulta consultas[], int i, int hora, int dia, int mes, int an
     return 0;
 }
 
-void agendaConsulta(Consulta consultas[], int qtdConsul, int totalConsult, int totalPac, int totalMed){
-    for(int i = totalConsult; i < qtdConsul + totalConsult; i++){
+int verificaId(int total, int id, int limite){
+    if(total == 0){
+            printf("Ninguem foi cadastrado\n");
+            return 0;
+    }else{   
+        while(id > limite || id < 0){
+            printf("\nId invalido\nDigite novamente: ");
+            scanf("%d", &id);
+        }
+    }
+    return id;
+}
+
+void agendaConsulta(Consulta consultas[], int qtdConsult, int totalConsult, int totalPac, int totalMed){
+    for(int i = totalConsult; i < qtdConsult + totalConsult; i++){
         consultas[i].idConsulta = i+1;
         int tempId;
         printf("Digite o ID do paciente\n");
         scanf("%d", &tempId);
-        if(totalPac == 0){
-            printf("Nenhum paciente foi cadastrado\n");
-            return;
-        }else{   
-            while(tempId > limitePaciente || tempId < 0){
-                printf("\nId invalido\nDigite novamente: ");
-                scanf("%d", &tempId);
-            }
-            consultas[i].pacientes.id = tempId;
+        if(verificaId(totalPac, tempId, limitePaciente) != 0){
+            consultas[i].pacientes.id = verificaId(totalPac, tempId, limitePaciente);
         }
         
         printf("Digite o ID do medico\n");
         scanf("%d", &tempId);
-        if(totalMed == 0){
-            printf("Nenhum medico foi cadastrado\n");
-            return;
-        }else{   
-            while(tempId > limiteMed || tempId < 0){
-                printf("\nId invalido\nDigite novamente: ");
-                scanf("%d", &tempId);
-            }
-            consultas[i].medicos.id = tempId;
+        if(verificaId(totalMed, tempId, limiteMed) != 0){
+            consultas[i].medicos.id = verificaId(totalMed, tempId, limiteMed);
         }
 
         int hora, dia, mes, ano;
@@ -288,3 +212,128 @@ void agendaConsulta(Consulta consultas[], int qtdConsul, int totalConsult, int t
 
     }
 }
+
+void listaConsultas(Consulta consultas[], Medico medicos[], Paciente pacientes[],int totalConsult, int totalMed, int totalPac){
+    char resp[9];
+    int id;
+   
+    printf("Quer verificar as consultas do medico ou do paciente?");
+    while(getchar() != '\n');
+    fgets(resp, 9, stdin);
+    resp[strcspn(resp, "\n")] = '\0';
+   
+    if(strcmp(resp, "medico") == 0){
+        printf("Qual o id do medico?\n");
+        scanf("%d", &id);
+        if(verificaId(totalMed, id, limiteMed) != 0){
+            printf("---Consultas---\n");
+            for(int i = 0; i < totalConsult; i++){
+                if(consultas[i].medicos.id == verificaId(totalMed, id, limiteMed)){
+                    for(int j = 0; j < totalPac; j++){
+                        if(pacientes[j].id == consultas[i].paciente.id){
+                            printf("Data da consulta: %d/%d/%d\nHorario: %d:00\nCRM: %d\nPaciente: %s\n", consultas[i].datas.dia, consultas[i].datas.mes, consultas[i].datas.ano, consultas[i].datas.hora, pacientes[j].nome);
+                        }
+                    }
+                }
+            }
+        }
+    } else if(strcmp(resp, "paciente") == 0){
+        printf("Qual o id do paciente?\n");
+        scanf("%d", &id);
+        if(verificaId(totalPac, id, limitePaciente) != 0){
+            printf("---Consultas---\n");
+            for(int i = 0; i < totalConsult; i++){
+                if(consultas[i].pacientes.id == verificaId(totalPac, id, limitePaciente)){
+                    for(int j = 0; j < totalMed; j++){
+                        if(medicos[j].id == consultas[i].medicos.id){
+                            printf("Data da consulta: %d/%d/%d\nHorario: %d:00\nCRM: %d\nPaciente: %s\n", consultas[i].datas.dia, consultas[i].datas.mes, consultas[i].datas.ano, consultas[i].datas.hora, medicos[j].nome);
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        printf("Opcao invalida");
+    }
+
+}
+
+
+int main (){
+    Paciente pacientes[limitePaciente];
+    Medico medicos[limiteMed];
+    Consulta consultas[limiteAgendamento];
+    int opcao;
+    int qtdPac = 0;
+    int qtdMed = 0;
+    int qtdConsult = 0;
+
+    do{ 
+        printf("1:Cadastor de Pacientes \n2:Cadastro de Medicos \n3: Lista de Medicos e Pacientes\n4: Agendamento das consultas\n");
+        scanf("%d", &opcao);
+        switch(opcao){
+            case 1:{
+                if(qtdPac == limitePaciente){
+                    printf("Limite de pacientes atingidos\n");
+                } else{
+                    int tempQtd;
+                    printf("Digite quantos pacientes quer cadastrar\n");
+                    scanf("%d", &tempQtd);
+
+                    while(tempQtd > 20 || tempQtd > (limitePaciente - qtdPac)){
+                        printf("A quantidade digitada ultrapassa o limite de cadastro permitido\n");
+                        printf("Digite outro valor\n");
+                        scanf("%d", &tempQtd);
+                    }
+                    cadastroPaciente(pacientes, tempQtd, qtdPac);
+                    qtdPac += tempQtd;
+                }
+                    break;
+                }
+            case 2:{
+                if(qtdMed == limiteMed){
+                    printf("Limite de medicos atingidos\n");
+                } else{
+                    int tempQtd;
+                    printf("Digite quantos medicos quer cadastrar\n");
+                    scanf("%d", &tempQtd);
+
+                    while(tempQtd > 20 || tempQtd > (limiteMed - qtdMed)){
+                        printf("A quantidade digitada ultrapassa o limite de cadastro permitido\n");
+                        printf("Digite outro valor\n");
+                        scanf("%d", &tempQtd);
+                    }
+                    cadastroMedico(medicos, tempQtd, qtdMed);
+                    qtdMed += tempQtd;
+                }
+                break;
+            }
+            case 3:
+                listaPacMed(medicos, pacientes, qtdMed, qtdPac);
+                break;
+            case 4:{
+                if(qtdConsult == limiteAgendamento){
+                    printf("O limite de consultas agendadas foi atingido\n");
+                }else{
+                    int tempQtd;
+                    printf("Quantas consultas quer cadastrar:\n");
+                    scanf("%d", &tempQtd);
+                    while(tempQtd > 20 || tempQtd > (limiteAgendamento - qtdConsult)){
+                        printf("A quantidade digitada ultrapassa o limite de cadastro permitido\n");
+                        printf("Digite outro valor\n");
+                        scanf("%d", &tempQtd);
+                    }
+                    agendaConsulta(consultas, tempQtd, qtdConsult, qtdPac, qtdMed);
+                    qtdConsult += tempQtd;
+                }
+                break;
+            }
+            case 5:
+                listaConsultas(consultas, medicos, pacientes, qtdConsult, qtdMed, qtdPac);
+                break;
+        }
+    }while(opcao != 0);
+    return 0;
+
+}
+
