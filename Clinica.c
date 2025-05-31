@@ -4,6 +4,7 @@
 
 #define limitePaciente 20
 #define limiteMed 10
+#define limiteAgendamento 50
 
 typedef struct{
     int id;
@@ -18,18 +19,34 @@ typedef struct{
     char nome[100];
     int CRM;
     char especialidade[100];
-    char disponibilidade[5]; //(manhã/tarde)
+    char disponibilidade[6]; //(manhã/tarde)
 }Medico;
+
+typedef struct{
+    int hora;
+    int dia;
+    int mes;
+    int ano;
+}Data;
+
+typedef struct{
+    int idConsulta;
+    Paciente pacientes;
+    Medico medicos;
+    Data datas;
+}Consulta;
 
 int main (){
     Paciente pacientes[limitePaciente];
     Medico medicos[limiteMed];
+    Consulta consultas[limiteAgendamento];
     int opcao;
     int qtdPac = 0;
     int qtdMed = 0;
+    int qtdConsult = 0;
 
     do{ 
-        printf("1:Cadastor de Pacientes \n2:Cadastro de Medicos \n3: Lista de Medicos e Pacientes\n");
+        printf("1:Cadastor de Pacientes \n2:Cadastro de Medicos \n3: Lista de Medicos e Pacientes\n4: Agendamento das consultas\n");
         scanf("%d", &opcao);
         switch(opcao){
             case 1:{
@@ -71,6 +88,23 @@ int main (){
             case 3:
                 listaPacMed(medicos, pacientes, qtdMed, qtdPac);
                 break;
+            case 4:{
+                if(qtdConsult == limiteAgendamento){
+                    printf("O limite de consultas agendadas foi atingido\n");
+                }else{
+                    int tempQtd;
+                    printf("Quantas consultas quer cadastrar:\n");
+                    scanf("%d", &tempQtd);
+                    while(tempQtd > 20 || tempQtd > (limiteAgendamento - qtdConsult)){
+                        printf("A quantidade digitada ultrapassa o limite de cadastro permitido\n");
+                        printf("Digite outro valor\n");
+                        scanf("%d", &tempQtd);
+                    }
+                    agendaConsulta(consultas, tempQtd, qtdConsult, qtdPac, qtdMed);
+                    qtdConsult += tempQtd;
+                }
+                break;
+            }
         }
     }while(opcao != 0);
     return 0;
@@ -157,5 +191,100 @@ void listaPacMed(Medico medicos[], Paciente pacientes[], int qtdMed, int qtdPac)
     printf("\n---Pacientes---\n");
     for(int i = 0; i < qtdPac; i++){
         printf("ID: %d\nNome: %s\nIdade: %d\nCPF: %d\nPlano de Saude: %d\n", pacientes[i].id, pacientes[i].nome, pacientes[i].idade, pacientes[i].CPF, pacientes[i].plano);
+    }
+}
+
+int verificaData(Consulta consultas[], int i, int hora, int dia, int mes, int ano, int idMed){
+    for(int j = 0; j < i; j++){
+        if(consultas[j].medicos.id == idMed && consultas[j].datas.hora == hora && consultas[j].datas.dia == dia && consultas[j].datas.mes == mes && consultas[j].datas.ano == ano){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void agendaConsulta(Consulta consultas[], int qtdConsul, int totalConsult, int totalPac, int totalMed){
+    for(int i = totalConsult; i < qtdConsul + totalConsult; i++){
+        consultas[i].idConsulta = i+1;
+        int tempId;
+        printf("Digite o ID do paciente\n");
+        scanf("%d", &tempId);
+        if(totalPac == 0){
+            printf("Nenhum paciente foi cadastrado\n");
+            return;
+        }else{   
+            while(tempId > limitePaciente || tempId < 0){
+                printf("\nId invalido\nDigite novamente: ");
+                scanf("%d", &tempId);
+            }
+            consultas[i].pacientes.id = tempId;
+        }
+        
+        printf("Digite o ID do medico\n");
+        scanf("%d", &tempId);
+        if(totalMed == 0){
+            printf("Nenhum medico foi cadastrado\n");
+            return;
+        }else{   
+            while(tempId > limiteMed || tempId < 0){
+                printf("\nId invalido\nDigite novamente: ");
+                scanf("%d", &tempId);
+            }
+            consultas[i].medicos.id = tempId;
+        }
+
+        int hora, dia, mes, ano;
+        printf("Digite o dia da consulta\n");
+        scanf("%d",&dia);
+        printf("Digite o mes da consulta\n");
+        scanf("%d",&mes);
+        printf("Digite o ano da consulta\n");
+        scanf("%d",&ano);
+        printf("Digite a hora da consulta\n");
+        scanf("%d", &hora);
+
+        while(verificaData(consultas, i, hora, dia, mes, ano, tempId)){
+            int opMedHora;
+            printf("Data ocupada\nTente outro medico ou outro horario\nDigite 1 para escolher outro medico, mas no mesmo horarrio\nDigite 2 para escolher outro horario, mas com o mesmo medico\nDigite 3 para escolher ouro medico e outro horarrio\n");
+            scanf("%d", &opMedHora);
+            switch (opMedHora){
+                case 1:{
+                    printf("Digite o ID do medico\n");
+                    scanf("%d", &tempId);
+                    break;
+                }
+                case 2:{
+                    printf("Digite o dia da consulta\n");
+                    scanf("%d",&dia);
+                    printf("Digite o mes da consulta\n");
+                    scanf("%d",&mes);
+                    printf("Digite o ano da consulta\n");
+                    scanf("%d",&ano);
+                    printf("Digite a hora da consulta\n");
+                    scanf("%d", &hora);
+                    break;
+                }                
+                case 3:{
+                    printf("Digite o ID do medico\n");
+                    scanf("%d", &tempId);
+                    printf("Digite o dia da consulta\n");
+                    scanf("%d",&dia);
+                    printf("Digite o mes da consulta\n");
+                    scanf("%d",&mes);
+                    printf("Digite o ano da consulta\n");
+                    scanf("%d",&ano);
+                    printf("Digite a hora da consulta\n");
+                    scanf("%d", &hora);
+                    break;
+                }
+            }
+        }
+
+        consultas[i].medicos.id = tempId;
+        consultas[i].datas.dia = dia;
+        consultas[i].datas.mes = mes;
+        consultas[i].datas.ano = ano;
+        consultas[i].datas.hora = hora;
+
     }
 }
