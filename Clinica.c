@@ -230,7 +230,7 @@ void listaConsultas(Consulta consultas[], Medico medicos[], Paciente pacientes[]
             for(int i = 0; i < totalConsult; i++){
                 if(consultas[i].medicos.id == verificaId(totalMed, id, limiteMed)){
                     for(int j = 0; j < totalPac; j++){
-                        if(pacientes[j].id == consultas[i].paciente.id){
+                        if(pacientes[j].id == consultas[i].pacientes.id){
                             printf("Data da consulta: %d/%d/%d\nHorario: %d:00\nCRM: %d\nPaciente: %s\n", consultas[i].datas.dia, consultas[i].datas.mes, consultas[i].datas.ano, consultas[i].datas.hora, pacientes[j].nome);
                         }
                     }
@@ -255,6 +255,26 @@ void listaConsultas(Consulta consultas[], Medico medicos[], Paciente pacientes[]
     } else {
         printf("Opcao invalida");
     }
+}
+
+void cancelaConsulta(Consulta consultas[], int *totalConsult){
+    int id;
+    printf("Informe o id da consulta que quer cancelar:\n");
+    scanf("%d", &id);
+    for(int i = id; i <= totalConsult; i++){
+        if(i == *totalConsult){
+            consultas[i].idConsulta = 0;
+            consultas[i].datas.dia = 0;
+            consultas[i].datas.mes = 0;
+            consultas[i].datas.ano = 0;
+            consultas[i].datas.hora = 0;
+            consultas[i].pacientes.id = 0;
+            consultas[i].medicos.id = 0;
+            (*totalConsult) --;
+        } else {
+             consultas[i] = consultas[i + 1];
+        }
+    }
 
 }
 
@@ -269,7 +289,7 @@ int main (){
     int qtdConsult = 0;
 
     do{ 
-        printf("1:Cadastor de Pacientes \n2:Cadastro de Medicos \n3: Lista de Medicos e Pacientes\n4: Agendamento das consultas\n");
+        printf("1:Cadastor de Pacientes \n2:Cadastro de Medicos \n3: Lista de Medicos e Pacientes\n4: Agendamento das consultas\n5: Listar Consultas\n6: Cancelar Consultas");
         scanf("%d", &opcao);
         switch(opcao){
             case 1:{
@@ -330,6 +350,9 @@ int main (){
             }
             case 5:
                 listaConsultas(consultas, medicos, pacientes, qtdConsult, qtdMed, qtdPac);
+                break;
+            case 6:
+                cancelaConsulta(consultas, &qtdConsult);
                 break;
         }
     }while(opcao != 0);
